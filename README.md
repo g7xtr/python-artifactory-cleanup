@@ -25,10 +25,14 @@ It's based on [dohq-artifactory](https://github.com/devopshq/artifactory)
       Delete files from Artifactory
 
       optional arguments:
-        -h, --help            show this help message and exit
-        -r REPO, --repo REPO  Repository name
-        -p PATH, --path PATH  Path to delete from
-        -t TIME, --time TIME  Older than.... (days, optional, default: 30)
-        -d, --delete          Default is dry run, must given if you want to delete
-        -v, --verbose         Show files which are/could be deleted
-        --show                Show only result
+          -h, --help            show this help message and exit
+          -r REPO, --repo REPO  Repository name
+          -p PATH, --path PATH  Path to delete from
+          -t TIME, --time TIME  Older than.... (days, optinal, default: 30)
+          -s TIMESETTING, --timesetting TIMESETTING
+                                [never|since|older]: used with time. Meanings: - never
+                                downloaded AND older than [-t]. Since: not dowloaded
+                                since [-t] days. Older: packages older than [-t] days
+          -d, --delete          Default is dry run, must given if you want to delete
+          -v, --verbose         Show files which are/could be deleted
+          --show                Show only result

@@ -4,4 +4,3 @@ API_KEY = __artifactory_apikey__
 
 [LOG]
 PATH = /var/log/python-artifactory-cleanup
-test

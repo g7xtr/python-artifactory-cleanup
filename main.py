@@ -17,6 +17,7 @@ parser = argparse.ArgumentParser(description='Delete files from Artifactory')
 parser.add_argument('-r','--repo', type=str, required=True, help='Repository name')
 parser.add_argument('-p', '--path', type=str, required=True, help='Path to delete from')
 parser.add_argument('-t', '--time', type=int, default=30, help='Older than.... (days, optinal, default: 30)')
+parser.add_argument('-s', '--timesetting', type=str, default="never", help='[never|since|older]: used with time. Meanings: - never downloaded AND older than [-t]. Since: not dowloaded since [-t] days. Older: packages older than [-t] days')
 parser.add_argument('-d','--delete', action='store_true', help='Default is dry run, must given if you want to delete')
 parser.add_argument('-v', '--verbose', action='store_true', help='Show files which are/could be deleted')
 parser.add_argument('--show', action='store_true', help='Show only result')
@@ -31,13 +32,14 @@ path = options.path
 days = options.time
 delete = options.delete
 verbose = options.verbose
+timesetting = options.timesetting
 
 aql = ArtifactoryPath(
     art_url,
     apikey=art_apikey
 )
-
-args = aql_search.package_search(repo, path,days)
+print("Searching....")
+args = aql_search.package_search(repo, path,days, timesetting)
 artifacts_list = aql.aql(*args)
 if options.show:
     print(len(artifacts_list))
@@ -50,26 +52,32 @@ else:
     log_name = log_path + "/log-dry_run-" + datetime.now().strftime("%Y%m%d-%H%M%S") + ".log"
 
 log_file = open(log_name, 'w')
-
+log_msg = '-'
+print("Processing list....")
 for item in artifacts_list:
-    file_args=aql_search.file_search(repo, path, item["name"])
+    file_args=aql_search.file_search(repo, path, item["name"],days)
     file_list= aql.aql(*file_args)
-
+    flag = aql_search.check_file_list(file_list, days)
+    if flag:
+        continue
     for file in file_list:
         file_url = art_url + file['repo'] + "/" + file['path'] + "/" + file['name']
         full_path = ArtifactoryPath(file_url,apikey=art_apikey)
         total_file_count += 1
-
         if delete:
             if full_path.exists():
                 log_msg = "deleting: " + file_url
                 full_path.unlink()
         else:
             log_msg = "dry run: " + file_url
+            if 'downloaded' in file['stats'][0]:
+                log_msg += "\n Last downloaded: " + file['stats'][0]['downloaded']
+
+        log_file.write(log_msg + "\n")
 
         if verbose:
             print(log_msg)
-        log_file.write(log_msg + "\n")
+
 
 run_stop = timeit.default_timer()
 running_time = run_stop - run_start
